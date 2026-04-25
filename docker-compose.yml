@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  # ── Churn Prediction API ──────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: churn-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount artifacts so model updates don't require image rebuild
+      - ./models/artifacts:/app/models/artifacts:ro
+      - ./logs:/app/logs
+    environment:
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # ── Monitoring job (runs on schedule, exits when done) ────────────────────
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: churn-monitor
+    command: python scripts/monitor.py
+    volumes:
+      - ./models/artifacts:/app/models/artifacts
+      - ./logs:/app/logs
+      - ./scripts:/app/scripts
+    depends_on:
+      api:
+        condition: service_healthy
+    profiles:
+      - monitoring  # Only runs when: docker compose --profile monitoring up monitor
+
+networks:
+  default:
+    name: churn-network

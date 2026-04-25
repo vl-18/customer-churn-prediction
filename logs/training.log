@@ -1,0 +1,94 @@
+2026-04-24 11:27:53,628 | INFO | __main__ | ============================================================
+2026-04-24 11:27:53,629 | INFO | __main__ | Customer Churn Prediction — Training Pipeline
+2026-04-24 11:27:53,629 | INFO | __main__ | ============================================================
+2026-04-24 11:27:53,629 | INFO | __main__ | 
+[1/8] Loading and validating data
+2026-04-24 11:27:53,629 | INFO | src.data.data_loader | No CSV found — generating synthetic dataset
+2026-04-24 11:27:53,640 | INFO | src.data.data_loader | Generated 10000 samples | Churn rate: 30.3%
+2026-04-24 11:27:53,687 | INFO | src.data.data_validator | Validation PASSED | 0 errors | 0 warnings
+2026-04-24 11:27:53,687 | INFO | __main__ | Dataset: 10000 rows | Churn rate: 30.3%
+2026-04-24 11:27:53,687 | INFO | __main__ | 
+[2/8] Feature engineering and preprocessing
+2026-04-24 11:27:53,735 | INFO | src.data.preprocessor | Split sizes — Train: 7000 | Val: 1000 | Test: 2000
+2026-04-24 11:27:53,736 | INFO | src.data.preprocessor | Churn rates — Train: 30.3% | Val: 30.3% | Test: 30.3%
+2026-04-24 11:27:53,736 | INFO | __main__ | Feature matrix: 19 features | 7000 training samples
+2026-04-24 11:27:53,736 | INFO | __main__ | 
+[3/8] Using imbalance strategy: class_weight
+2026-04-24 11:27:53,736 | INFO | __main__ | 
+[4/8] Baseline cross-validation (strategy: class_weight)
+2026-04-24 11:28:04,846 | INFO | src.models.trainer | LogisticRegression CV Results | ROC-AUC: 0.7033 ± 0.0140 | PR-AUC: 0.4900 | F1: 0.5261 | Time: 11.1s
+2026-04-24 11:28:11,894 | INFO | src.models.trainer | RandomForest CV Results | ROC-AUC: 0.6947 ± 0.0148 | PR-AUC: 0.4750 | F1: 0.4944 | Time: 7.0s
+2026-04-24 11:28:11,894 | WARNING | src.models.trainer | RandomForest: Train-Val ROC-AUC gap = 0.261 → potential overfitting
+2026-04-24 11:28:14,271 | INFO | src.models.trainer | XGBoost CV Results | ROC-AUC: 0.6844 ± 0.0083 | PR-AUC: 0.4614 | F1: 0.3268 | Time: 2.4s
+2026-04-24 11:28:14,271 | WARNING | src.models.trainer | XGBoost: Train-Val ROC-AUC gap = 0.226 → potential overfitting
+2026-04-24 11:28:14,271 | INFO | __main__ | 
+Baseline Model Comparison:
+2026-04-24 11:28:14,271 | INFO | __main__ | Model                      Val ROC-AUC Val PR-AUC   Val F1  Train-Val Gap
+2026-04-24 11:28:14,271 | INFO | __main__ | ---------------------------------------------------------------------------
+2026-04-24 11:28:14,271 | INFO | __main__ | LogisticRegression              0.7033     0.4900   0.5261         0.0051
+2026-04-24 11:28:14,271 | INFO | __main__ | RandomForest                    0.6947     0.4750   0.4944         0.2614
+2026-04-24 11:28:14,271 | INFO | __main__ | XGBoost                         0.6844     0.4614   0.3268         0.2258
+2026-04-24 11:28:14,272 | INFO | __main__ | 
+Best baseline model: LogisticRegression (ROC-AUC: 0.7033)
+2026-04-24 11:28:14,272 | INFO | __main__ | 
+[5/8] Hyperparameter tuning: Skipped
+2026-04-24 11:28:14,272 | INFO | __main__ | Using baseline hyperparameters (pass --tune for Optuna optimization)
+2026-04-24 11:28:14,272 | INFO | __main__ | 
+[6/8] Training final XGBoost on full training set
+2026-04-24 11:28:14,272 | INFO | src.models.trainer | XGBoost scale_pos_weight set to 2.30
+2026-04-24 11:28:14,273 | INFO | src.models.trainer | Training final XGBoost on 7000 samples...
+2026-04-24 11:28:14,770 | INFO | src.models.trainer | XGBoost trained in 0.5s
+2026-04-24 11:28:14,823 | INFO | src.evaluation.evaluator | [Train] ROC-AUC=0.8957 | PR-AUC=0.7878 | F1=0.6660 | Precision=0.5118 | Recall=0.9534 | Threshold=0.4
+2026-04-24 11:28:14,879 | INFO | src.evaluation.evaluator | [Val] ROC-AUC=0.7031 | PR-AUC=0.5044 | F1=0.5253 | Precision=0.4035 | Recall=0.7525 | Threshold=0.4
+2026-04-24 11:28:14,880 | INFO | src.evaluation.evaluator | 
+============================================================
+Bias-Variance Report: XGBoost
+  Train ROC-AUC : 0.8957
+  Val   ROC-AUC : 0.7031
+  Gap           : 0.1926
+  Diagnosis     : Overfitting (High Variance)
+  Recommendation: Increase regularization (C for LR, max_depth for trees), reduce n_estimators, apply dropout, or collect more training data
+============================================================
+2026-04-24 11:28:14,880 | INFO | __main__ | 
+[7/8] Evaluating on held-out test set
+2026-04-24 11:28:14,989 | INFO | src.evaluation.evaluator | Optimal threshold (cost): 0.37 | Score: -542.0000
+2026-04-24 11:28:14,989 | INFO | __main__ | Business-optimal threshold: 0.37
+2026-04-24 11:28:15,016 | INFO | src.evaluation.evaluator | [Test] ROC-AUC=0.6722 | PR-AUC=0.4541 | F1=0.5165 | Precision=0.3839 | Recall=0.7888 | Threshold=0.37
+2026-04-24 11:28:16,594 | INFO | src.evaluation.evaluator | Evaluation dashboard saved to /home/claude/churn_prediction/models/artifacts/evaluation_dashboard.png
+2026-04-24 11:28:16,595 | INFO | __main__ | 
+[8/8] Computing SHAP explanations
+2026-04-24 11:28:16,625 | INFO | src.explainability.explainer | Using TreeExplainer for XGBClassifier
+2026-04-24 11:28:16,627 | INFO | src.explainability.explainer | Subsampled to 300 rows for SHAP computation
+2026-04-24 11:28:18,077 | INFO | src.explainability.explainer | Global importance plot saved to /home/claude/churn_prediction/models/artifacts/shap_global_importance.png
+2026-04-24 11:28:18,901 | INFO | src.explainability.explainer | SHAP beeswarm saved to /home/claude/churn_prediction/models/artifacts/shap_beeswarm.png
+2026-04-24 11:28:19,376 | INFO | src.explainability.explainer | Local explanation saved to /home/claude/churn_prediction/models/artifacts/shap_local_explanation.png
+2026-04-24 11:28:19,377 | INFO | src.explainability.explainer | 
+Customer HIGH_RISK_SAMPLE — Churn Prob: 87.7%
+Top churn drivers: {'num__tenure_months': 0.5900875795329921, 'cat__contract_type_Two Year': 0.31544718088465745, 'cat__contract_type_One Year': 0.27322723472025245, 'num__monthly_charges': 0.27077480843174273, 'num__total_charges': 0.20758069623436312}
+Top retention factors: {'num__num_support_calls': -0.08706550780916586, 'num__charge_per_month_ratio': -0.03547012990806252, 'cat__is_senior_citizen_1': -0.02888342293095775, 'num__tenure_x_products': -0.02430788934638258, 'cat__payment_method_Electronic Check': -0.006264959697145969}
+2026-04-24 11:28:19,377 | INFO | __main__ | High-risk customer churn prob: 87.7%
+2026-04-24 11:28:19,377 | INFO | __main__ | 
+Registering model in registry
+2026-04-24 11:28:19,389 | INFO | src.models.model_registry | Registered model XGBoost as version v1.0.0
+2026-04-24 11:28:19,398 | INFO | src.models.model_registry | ✅ Promoted v1.0.0 to champion. API will load from /home/claude/churn_prediction/models/artifacts
+2026-04-24 11:28:19,398 | INFO | __main__ | 
+============================================================
+Training Complete — Champion Model: XGBoost (v1.0.0)
+============================================================
+Test Set Performance:
+  ROC-AUC  : 0.6722
+  PR-AUC   : 0.4541
+  F1       : 0.5165
+  Precision: 0.3839
+  Recall   : 0.7888
+  Threshold: 0.37
+
+Bias-Variance:
+  Train ROC-AUC: 0.8957
+  Val   ROC-AUC: 0.7031
+  Diagnosis    : Overfitting (High Variance)
+
+Artifacts saved to: /home/claude/churn_prediction/models/artifacts
+API ready: uvicorn api.app:app --host 0.0.0.0 --port 8000
+============================================================
+

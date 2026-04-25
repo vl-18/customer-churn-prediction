@@ -1,0 +1,12 @@
+{
+  "versions": [
+    {
+      "version": "v1.0.0",
+      "model_name": "XGBoost",
+      "registered_at": "2026-04-24T11:28:19.388672",
+      "roc_auc": 0.6721818164599818,
+      "status": "candidate"
+    }
+  ],
+  "champion": "v1.0.0"
+}
